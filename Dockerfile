@@ -1,8 +1,8 @@
 ARG FOUNDRY_PASSWORD
 ARG FOUNDRY_RELEASE_URL
 ARG FOUNDRY_USERNAME
-ARG FOUNDRY_VERSION=10.291
-ARG NODE_IMAGE_VERSION=16-alpine3.15
+ARG FOUNDRY_VERSION=12.331
+ARG NODE_IMAGE_VERSION=18-alpine3.18
 ARG VERSION
 
 FROM node:${NODE_IMAGE_VERSION} as compile-typescript-stage
@@ -41,8 +41,8 @@ RUN \
   if [ -n "${FOUNDRY_USERNAME}" ] && [ -n "${FOUNDRY_PASSWORD}" ]; then \
   npm install && \
   ./authenticate.js "${FOUNDRY_USERNAME}" "${FOUNDRY_PASSWORD}" cookiejar.json && \
-  s3_url=$(./get_release_url.js --retry 5 cookiejar.json "${FOUNDRY_VERSION}") && \
-  wget -O ${ARCHIVE} "${s3_url}" && \
+  presigned_url=$(./get_release_url.js --retry 5 cookiejar.json "${FOUNDRY_VERSION}") && \
+  wget -O ${ARCHIVE} "${presigned_url}" && \
   unzip -d dist ${ARCHIVE} 'resources/*'; \
   elif [ -n "${FOUNDRY_RELEASE_URL}" ]; then \
   wget -O ${ARCHIVE} "${FOUNDRY_RELEASE_URL}" && \
@@ -79,6 +79,7 @@ RUN addgroup --system --gid ${FOUNDRY_UID} foundry \
   && adduser --system --uid ${FOUNDRY_UID} --ingroup foundry foundry \
   && apk --update --no-cache add \
   curl \
+  file \
   jq \
   sed \
   su-exec \

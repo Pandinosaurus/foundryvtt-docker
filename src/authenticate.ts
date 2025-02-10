@@ -24,7 +24,7 @@ Options:
 // Imports
 import { CookieJar, Cookie } from "tough-cookie";
 import { FileCookieStore } from "tough-cookie-file-store";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import createLogger from "./logging.js";
 import winston from "winston";
 import docopt from "docopt";
@@ -94,10 +94,9 @@ async function login(
 ) {
   const form_params = new URLSearchParams({
     csrfmiddlewaretoken: csrfmiddlewaretoken,
-    login_password: password,
-    login_redirect: "/",
-    login_username: username,
-    login: "",
+    next: "/",
+    password: password,
+    username: username,
   });
 
   logger.info(`Logging in as: ${username}`);

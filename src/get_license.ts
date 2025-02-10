@@ -32,7 +32,7 @@ Options:
 // Imports
 import { CookieJar } from "tough-cookie";
 import { FileCookieStore } from "tough-cookie-file-store";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 import createLogger from "./logging.js";
 import docopt from "docopt";
 import fetchCookie from "fetch-cookie";
@@ -76,11 +76,13 @@ async function fetchLicenses(username: string): Promise<string[]> {
   const body = await response.text();
   const $ = await cheerio.load(body);
 
-  const licenses: string[] = $("pre.key-code code")
+  const licenses: string[] = $("div.license label.copy input")
     .map(function (this: cheerio.Element) {
-      return $(this).text().replace(/-/g, ""); // remove dashes
+      const value = $(this).attr("value");
+      return value ? value.replace(/-/g, "") : undefined; // remove dashes
     })
-    .get();
+    .get()
+    .filter(Boolean);
   return licenses;
 }
 
@@ -110,7 +112,7 @@ async function main(): Promise<number> {
   // Retrieve username from cookie.
   const local_cookies = cookieJar.getCookiesSync(`http://${LOCAL_DOMAIN}`);
   if (local_cookies.length != 1) {
-    logger.emerg(
+    logger.error(
       `Wrong number of cookies found for ${LOCAL_DOMAIN}.  Expected 1, found ${local_cookies.length}`,
     );
     return -1;
